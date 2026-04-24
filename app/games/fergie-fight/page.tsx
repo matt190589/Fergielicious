@@ -7,56 +7,95 @@ import GameLayout from "@/components/ui/GameLayout";
 import GameOverScreen from "@/components/ui/GameOverScreen";
 import Button from "@/components/ui/Button";
 import Timer from "@/components/ui/Timer";
-import { FERGIE_PLACEHOLDER } from "@/lib/images";
+import { FERGIE_BOXING, BLACK_DILDO } from "@/lib/images";
 import { randomInt } from "@/lib/utils";
 
-const DURATION = 40;
+const DURATION = 30;
+const DILDO_WINDOW_MS = 600;
+const DILDO_CHANCE = 0.3;
+const SWIPE_THRESHOLD = 50;
 
-function getResultMessage(score: number): string {
+function getResultMessage(score: number, whacks: number): string {
+  if (whacks >= 4) return `Fergie jabbed you ${whacks} times with his big black dick. Who's really winning here?`;
   if (score === 0) return "Fergie didn't even feel it. Try harder!";
   if (score <= 5) return "A light warm-up. Fergie's barely sweating.";
-  if (score <= 15) return "Not bad! Fergie's got a black eye.";
-  if (score <= 25) return "Fergie's seeing stars. You absolute menace.";
-  return "Fergie is unconscious. You've gone too far. Incredible.";
+  if (score <= 15) return "Not bad! Fergie's got a three back eyes.";
+  if (score <= 25) return "Fergie's battered. Ole, Ole, Ole";
+  return "Fergie KOed!";
 }
 
 export default function FergieFight() {
   const router = useRouter();
-  const [gameState, setGameState] = useState<"idle" | "playing" | "done">(
-    "idle"
-  );
+  const [gameState, setGameState] = useState<"idle" | "playing" | "done">("idle");
   const [score, setScore] = useState(0);
+  const [dildoWhacks, setDildoWhacks] = useState(0);
   const [timeLeft, setTimeLeft] = useState(DURATION);
   const [position, setPosition] = useState({ x: 50, y: 50 });
   const [visible, setVisible] = useState(false);
+  const [dildoVisible, setDildoVisible] = useState(false);
+  const [feedback, setFeedback] = useState<"dodged" | "whacked" | null>(null);
 
   const moveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const gameStateRef = useRef(gameState);
+  const dildoActiveRef = useRef(false);
+  const swipeStartXRef = useRef<number | null>(null);
 
-  useEffect(() => {
-    gameStateRef.current = gameState;
-  });
+  useEffect(() => { gameStateRef.current = gameState; });
 
+  const showFeedbackRef = useRef((_type: "dodged" | "whacked") => {});
+  const resumeAfterDildo = useRef(() => {});
   const scheduleMove = useRef(() => {});
 
-  scheduleMove.current = () => {
-    if (gameStateRef.current !== "playing") return;
-    const duration = randomInt(800, 1500);
-    moveTimerRef.current = setTimeout(() => {
-      setVisible(false);
+  useEffect(() => {
+    showFeedbackRef.current = (type: "dodged" | "whacked") => {
+      if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+      setFeedback(type);
+      feedbackTimerRef.current = setTimeout(() => setFeedback(null), 600);
+    };
+
+    resumeAfterDildo.current = () => {
+      if (gameStateRef.current !== "playing") return;
       moveTimerRef.current = setTimeout(() => {
         if (gameStateRef.current !== "playing") return;
         setPosition({ x: randomInt(5, 80), y: randomInt(5, 80) });
         setVisible(true);
         scheduleMove.current();
-      }, 200);
-    }, duration);
-  };
+      }, 750);
+    };
+
+    scheduleMove.current = () => {
+      if (gameStateRef.current !== "playing") return;
+      moveTimerRef.current = setTimeout(() => {
+        setVisible(false);
+        moveTimerRef.current = setTimeout(() => {
+          if (gameStateRef.current !== "playing") return;
+
+          if (Math.random() < DILDO_CHANCE) {
+            dildoActiveRef.current = true;
+            setDildoVisible(true);
+
+            moveTimerRef.current = setTimeout(() => {
+              if (dildoActiveRef.current) {
+                dildoActiveRef.current = false;
+                setDildoWhacks((prev) => prev + 1);
+                showFeedbackRef.current("whacked");
+              }
+              setDildoVisible(false);
+              resumeAfterDildo.current();
+            }, DILDO_WINDOW_MS);
+          } else {
+            setPosition({ x: randomInt(5, 80), y: randomInt(5, 80) });
+            setVisible(true);
+            scheduleMove.current();
+          }
+        }, 200);
+      }, randomInt(400, 800));
+    };
+  });
 
   useEffect(() => {
     if (gameState !== "playing") return;
-    setPosition({ x: randomInt(5, 80), y: randomInt(5, 80) });
-    setVisible(true);
     scheduleMove.current();
     return () => {
       if (moveTimerRef.current) clearTimeout(moveTimerRef.current);
@@ -68,6 +107,8 @@ export default function FergieFight() {
     if (timeLeft === 0) {
       setGameState("done");
       setVisible(false);
+      setDildoVisible(false);
+      dildoActiveRef.current = false;
       if (moveTimerRef.current) clearTimeout(moveTimerRef.current);
       return;
     }
@@ -88,11 +129,37 @@ export default function FergieFight() {
     }, 200);
   }
 
+  function handleArenaPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    if (gameState !== "playing") return;
+    swipeStartXRef.current = e.clientX;
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }
+
+  function handleArenaPointerUp(e: React.PointerEvent<HTMLDivElement>) {
+    if (swipeStartXRef.current === null) return;
+    const deltaX = e.clientX - swipeStartXRef.current;
+    swipeStartXRef.current = null;
+
+    if (dildoActiveRef.current && deltaX > SWIPE_THRESHOLD) {
+      dildoActiveRef.current = false;
+      setDildoVisible(false);
+      if (moveTimerRef.current) clearTimeout(moveTimerRef.current);
+      showFeedbackRef.current("dodged");
+      resumeAfterDildo.current();
+    }
+  }
+
   function handleStart() {
     setScore(0);
+    setDildoWhacks(0);
     setTimeLeft(DURATION);
-    setVisible(false);
+    setPosition({ x: randomInt(5, 80), y: randomInt(5, 80) });
+    setVisible(true);
+    setDildoVisible(false);
+    setFeedback(null);
+    dildoActiveRef.current = false;
     if (moveTimerRef.current) clearTimeout(moveTimerRef.current);
+    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
     setGameState("playing");
   }
 
@@ -100,8 +167,8 @@ export default function FergieFight() {
     return (
       <GameLayout title="Fergie Fight">
         <GameOverScreen
-          score={`${score} punch${score === 1 ? "" : "es"}! 🥊`}
-          message={getResultMessage(score)}
+          score={`🥊 ${score} punch${score === 1 ? "" : "es"} · 🍆 ${dildoWhacks} whack${dildoWhacks === 1 ? "" : "s"}`}
+          message={getResultMessage(score, dildoWhacks)}
           onPlayAgain={handleStart}
           onBackToMenu={() => router.push("/")}
         />
@@ -114,7 +181,7 @@ export default function FergieFight() {
       <div className="flex flex-col flex-1 items-center px-4 py-4 gap-4">
         <div className="flex justify-between items-center w-full max-w-md">
           <div className="bg-white rounded-xl px-4 py-2 shadow">
-            <p className="font-display text-xl">🥊 {score}</p>
+            <p className="font-display text-xl">🥊 {score} · 🍆 {dildoWhacks}</p>
           </div>
           {gameState === "playing" && <Timer seconds={timeLeft} />}
         </div>
@@ -128,6 +195,8 @@ export default function FergieFight() {
             minHeight: 360,
             touchAction: "none",
           }}
+          onPointerDown={handleArenaPointerDown}
+          onPointerUp={handleArenaPointerUp}
         >
           <div className="absolute inset-2 border-4 border-red-primary rounded-xl pointer-events-none" />
           <div className="absolute inset-4 border-2 border-white/40 rounded-lg pointer-events-none" />
@@ -147,7 +216,7 @@ export default function FergieFight() {
               }}
             >
               <Image
-                src={FERGIE_PLACEHOLDER}
+                src={FERGIE_BOXING}
                 alt="Fergie"
                 fill
                 className="object-cover"
@@ -157,8 +226,45 @@ export default function FergieFight() {
             </button>
           )}
 
+          {dildoVisible && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 pointer-events-none">
+              <Image
+                src={BLACK_DILDO}
+                alt=""
+                width={90}
+                height={160}
+                className="object-contain"
+                unoptimized
+              />
+              <p className="font-display text-white text-3xl drop-shadow-lg animate-pulse">
+                SWIPE RIGHT →
+              </p>
+            </div>
+          )}
+
+          {feedback === "dodged" && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <p className="font-display text-green-300 text-5xl drop-shadow-lg">
+                DODGED! ✓
+              </p>
+            </div>
+          )}
+
+          {feedback === "whacked" && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-red-600/30">
+              <p className="font-display text-white text-5xl drop-shadow-lg">
+                WHACK! 🍆
+              </p>
+            </div>
+          )}
+
           {gameState === "idle" && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-2xl">
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/60 rounded-2xl px-6">
+              <div className="bg-white/10 rounded-2xl px-5 py-4 text-center space-y-1">
+                <p className="font-display text-white text-lg">🥊 Tap Fergie to land a punch</p>
+                <p className="font-display text-white text-lg">🍆 Swipe right to dodge the dildo</p>
+                <p className="font-body text-white/70 text-sm">You have 0.6s to dodge — don&apos;t get caught!</p>
+              </div>
               <Button variant="primary" onClick={handleStart}>
                 Start Fight! 🥊
               </Button>
@@ -167,8 +273,8 @@ export default function FergieFight() {
         </div>
 
         {gameState === "playing" && (
-          <p className="text-gray-500 font-body text-sm">
-            Tap Fergie to land a punch!
+          <p className="text-gray-500 font-body text-sm text-center">
+            Tap Fergie · Swipe right to dodge the dildo!
           </p>
         )}
       </div>

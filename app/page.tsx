@@ -4,13 +4,13 @@ const games = [
   {
     emoji: "🍆",
     title: "Pin the Willy on Fergie",
-    teaser: "Blindfolded emoji placement chaos.",
+    teaser: "Help Fergie find his wee Willy!",
     href: "/games/pin-the-willy",
   },
   {
     emoji: "🍷",
     title: "Buck Fergie",
-    teaser: "Feed Fergie as much Buckfast as possible in 30 seconds.",
+    teaser: "Feed Fergie as much Buckfast as possible in 20 seconds.",
     href: "/games/buck-fergie",
   },
   {
