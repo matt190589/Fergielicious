@@ -4,37 +4,67 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import GameLayout from "@/components/ui/GameLayout";
-import GameOverScreen from "@/components/ui/GameOverScreen";
 import Button from "@/components/ui/Button";
-import { FERGIE_PLACEHOLDER } from "@/lib/images";
+import { FERGIE_PIN, LIVERPOOL_CREST } from "@/lib/images";
 
-type EmojiType = "aubergine" | "laugh" | "unicorn";
+type PinType = "aubergine" | "laugh" | "liverpool";
 
-type PinnedEmoji = {
-  id: string;
-  type: EmojiType;
+type PlacedItem = {
+  type: PinType;
   x: number;
   y: number;
 };
 
-const EMOJIS: Record<EmojiType, string> = {
+const EMOJIS: Partial<Record<PinType, string>> = {
   aubergine: "🍆",
   laugh: "😂",
-  unicorn: "🦄",
 };
+
+const PIN_TYPES: PinType[] = ["aubergine", "laugh", "liverpool"];
+
+const CAPTIONS = [
+  "Well, that's one way to decorate Fergie.",
+  "Fergie's never looked so well-hung.",
+  "Now THAT'S what you call a member of the party.",
+  "A stroke of genius. Fergie's impressed.",
+  "Fergie's got a schlong way to go, but you're helping.",
+];
+
+function PinItemDisplay({
+  type,
+  size,
+}: {
+  type: PinType;
+  size: "picker" | "ghost" | "modal";
+}) {
+  if (type === "liverpool") {
+    const px = size === "modal" ? 60 : 72;
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={LIVERPOOL_CREST}
+        alt="Liverpool FC"
+        width={px}
+        height={px}
+        className="object-contain rounded-full"
+        draggable={false}
+      />
+    );
+  }
+  const cls = size === "modal" ? "text-6xl" : "text-7xl";
+  return <span className={cls}>{EMOJIS[type]}</span>;
+}
 
 export default function PinTheWilly() {
   const router = useRouter();
-  const [pinned, setPinned] = useState<PinnedEmoji[]>([]);
+  const [placed, setPlaced] = useState<PlacedItem | null>(null);
+  const [caption, setCaption] = useState("");
   const [isBlindfolded, setIsBlindfolded] = useState(false);
-  const [ghostPos, setGhostPos] = useState<{ x: number; y: number } | null>(
-    null
-  );
-  const [gameOver, setGameOver] = useState(false);
+  const [ghostPos, setGhostPos] = useState<{ x: number; y: number } | null>(null);
 
   const photoRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
-  const dragTypeRef = useRef<EmojiType | null>(null);
+  const dragTypeRef = useRef<PinType | null>(null);
 
   useEffect(() => {
     function handleMove(e: PointerEvent) {
@@ -56,15 +86,8 @@ export default function PinTheWilly() {
         ) {
           const x = ((e.clientX - rect.left) / rect.width) * 100;
           const y = ((e.clientY - rect.top) / rect.height) * 100;
-          setPinned((prev) => [
-            ...prev,
-            {
-              id: `${Date.now()}-${Math.random()}`,
-              type: dragTypeRef.current!,
-              x,
-              y,
-            },
-          ]);
+          setPlaced({ type: dragTypeRef.current!, x, y });
+          setCaption(CAPTIONS[Math.floor(Math.random() * CAPTIONS.length)]);
         }
       }
 
@@ -82,106 +105,113 @@ export default function PinTheWilly() {
     };
   }, []);
 
-  function startDrag(type: EmojiType, x: number, y: number) {
+  function startDrag(type: PinType, x: number, y: number) {
     isDraggingRef.current = true;
     dragTypeRef.current = type;
     setGhostPos({ x, y });
     setIsBlindfolded(true);
   }
 
-  function handleReset() {
-    setPinned([]);
-  }
-
-  function handlePlayAgain() {
-    setPinned([]);
-    setGameOver(false);
-  }
-
   return (
     <GameLayout title="Pin the Willy on Fergie">
-      {gameOver ? (
-        <GameOverScreen
-          score="🍆 Pinned!"
-          message="Well, that's one way to decorate Fergie."
-          onPlayAgain={handlePlayAgain}
-          onBackToMenu={() => router.push("/")}
-        />
-      ) : (
-        <div className="flex flex-col items-center px-4 py-6 gap-6">
-          <div
-            ref={photoRef}
-            className="relative w-full max-w-sm aspect-square rounded-2xl overflow-hidden shadow-lg bg-amber-100 select-none"
-            style={{ touchAction: "none" }}
-          >
-            <Image
-              src={FERGIE_PLACEHOLDER}
-              alt="Fergie"
-              fill
-              className="object-cover"
-              priority
-              unoptimized
-            />
-            {isBlindfolded && (
-              <div className="absolute inset-0 bg-black z-10" />
-            )}
-            {pinned.map((p) => (
-              <span
-                key={p.id}
-                className="absolute z-20 text-4xl select-none pointer-events-none"
-                style={{
-                  left: `${p.x}%`,
-                  top: `${p.y}%`,
-                  transform: "translate(-50%, -50%)",
+      <div className="flex flex-col items-center px-4 py-6 gap-6">
+        <div
+          ref={photoRef}
+          className="relative w-full max-w-sm aspect-square rounded-2xl overflow-hidden shadow-lg bg-amber-100 select-none"
+          style={{ touchAction: "none" }}
+        >
+          <Image
+            src={FERGIE_PIN}
+            alt="Fergie"
+            fill
+            className="object-cover"
+            priority
+            unoptimized
+          />
+          {isBlindfolded && (
+            <div className="absolute inset-0 bg-black z-10" />
+          )}
+        </div>
+
+        <div>
+          <p className="text-center text-sm text-gray-500 mb-3 font-body">
+            Drag an emoji and drop it onto Fergie!
+          </p>
+          <div className="flex gap-8 justify-center items-center">
+            {PIN_TYPES.map((type) => (
+              <button
+                key={type}
+                className="select-none cursor-grab active:cursor-grabbing touch-none"
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  startDrag(type, e.clientX, e.clientY);
                 }}
               >
-                {EMOJIS[p.type]}
-              </span>
+                <PinItemDisplay type={type} size="picker" />
+              </button>
             ))}
           </div>
+        </div>
+      </div>
 
-          <div>
-            <p className="text-center text-sm text-gray-500 mb-3 font-body">
-              Drag an emoji and drop it onto Fergie!
-            </p>
-            <div className="flex gap-8 justify-center">
-              {(Object.entries(EMOJIS) as [EmojiType, string][]).map(
-                ([type, emoji]) => (
-                  <button
-                    key={type}
-                    className="text-5xl select-none cursor-grab active:cursor-grabbing touch-none"
-                    onPointerDown={(e) => {
-                      e.preventDefault();
-                      startDrag(type, e.clientX, e.clientY);
-                    }}
-                  >
-                    {emoji}
-                  </button>
-                )
-              )}
-            </div>
-          </div>
-
-          <div className="flex gap-4">
-            <Button variant="secondary" onClick={handleReset}>
-              Reset
-            </Button>
-            <Button variant="primary" onClick={() => setGameOver(true)}>
-              Done ✓
-            </Button>
-          </div>
+      {ghostPos && dragTypeRef.current && (
+        <div
+          className="fixed pointer-events-none z-50 select-none"
+          style={{
+            left: ghostPos.x - 36,
+            top: ghostPos.y - 36,
+          }}
+        >
+          <PinItemDisplay type={dragTypeRef.current} size="ghost" />
         </div>
       )}
 
-      {!gameOver && ghostPos && dragTypeRef.current && (
-        <div
-          className="fixed pointer-events-none z-50 text-5xl select-none"
-          style={{
-            left: ghostPos.x - 24,
-            top: ghostPos.y - 24,
-          }}
-        >
-          {EMOJIS[dragTypeRef.current]}
+      {placed && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+          <div className="bg-white rounded-3xl shadow-2xl p-6 flex flex-col items-center gap-5 w-full max-w-sm">
+            <h2 className="font-display text-3xl text-red-600 tracking-wide">
+              Result!
+            </h2>
+            <div className="relative w-full aspect-square rounded-xl overflow-hidden shadow-md">
+              <Image
+                src={FERGIE_PIN}
+                alt="Fergie"
+                fill
+                className="object-cover"
+                priority
+                unoptimized
+              />
+              <div
+                className="absolute z-10 pointer-events-none"
+                style={{
+                  left: `${placed.x}%`,
+                  top: `${placed.y}%`,
+                  transform: "translate(-50%, -50%)",
+                }}
+              >
+                <PinItemDisplay type={placed.type} size="modal" />
+              </div>
+            </div>
+            <p className="font-body text-gray-600 text-center text-lg">
+              {caption}
+            </p>
+            <div className="flex gap-3 w-full">
+              <Button
+                variant="secondary"
+                onClick={() => router.push("/")}
+                className="flex-1 min-w-0"
+              >
+                ← Menu
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => setPlaced(null)}
+                className="flex-1 min-w-0"
+              >
+                Play Again
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </GameLayout>
