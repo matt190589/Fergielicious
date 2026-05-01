@@ -105,12 +105,14 @@ export default function FergieFight() {
   useEffect(() => {
     if (gameState !== "playing") return;
     if (timeLeft === 0) {
-      setGameState("done");
-      setVisible(false);
-      setDildoVisible(false);
-      dildoActiveRef.current = false;
       if (moveTimerRef.current) clearTimeout(moveTimerRef.current);
-      return;
+      dildoActiveRef.current = false;
+      const t = setTimeout(() => {
+        setGameState("done");
+        setVisible(false);
+        setDildoVisible(false);
+      }, 0);
+      return () => clearTimeout(t);
     }
     const t = setTimeout(() => setTimeLeft((prev) => prev - 1), 1000);
     return () => clearTimeout(t);
@@ -234,6 +236,7 @@ export default function FergieFight() {
                 width={90}
                 height={160}
                 className="object-contain"
+                style={{ width: 90, height: "auto" }}
                 unoptimized
               />
               <p className="font-display text-white text-3xl drop-shadow-lg animate-pulse">
@@ -263,7 +266,7 @@ export default function FergieFight() {
               <div className="bg-white/10 rounded-2xl px-5 py-4 text-center space-y-1">
                 <p className="font-display text-white text-lg">🥊 Tap Fergie to land a punch</p>
                 <p className="font-display text-white text-lg">🍆 Swipe right to dodge the dildo</p>
-                <p className="font-body text-white/70 text-sm">You have 0.6s to dodge — don&apos;t get caught!</p>
+                <p className="font-body text-white/70 text-sm">You have under a second to dodge — don&apos;t get caught!</p>
               </div>
               <Button variant="primary" onClick={handleStart}>
                 Start Fight! 🥊

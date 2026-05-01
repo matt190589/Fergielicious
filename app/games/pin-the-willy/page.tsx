@@ -26,7 +26,7 @@ const CAPTIONS = [
   "Well, that's one way to decorate Fergie.",
   "Fergie's never looked so well-hung.",
   "Now THAT'S what you call a member of the party.",
-  "A stroke of genius. Fergie's impressed.",
+  "Fergie likes a wee stroke!",
   "Fergie's got a schlong way to go, but you're helping.",
 ];
 
@@ -61,6 +61,7 @@ export default function PinTheWilly() {
   const [caption, setCaption] = useState("");
   const [isBlindfolded, setIsBlindfolded] = useState(false);
   const [ghostPos, setGhostPos] = useState<{ x: number; y: number } | null>(null);
+  const [dragType, setDragType] = useState<PinType | null>(null);
 
   const photoRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
@@ -93,6 +94,7 @@ export default function PinTheWilly() {
 
       isDraggingRef.current = false;
       dragTypeRef.current = null;
+      setDragType(null);
       setGhostPos(null);
       setIsBlindfolded(false);
     }
@@ -108,6 +110,7 @@ export default function PinTheWilly() {
   function startDrag(type: PinType, x: number, y: number) {
     isDraggingRef.current = true;
     dragTypeRef.current = type;
+    setDragType(type);
     setGhostPos({ x, y });
     setIsBlindfolded(true);
   }
@@ -154,7 +157,7 @@ export default function PinTheWilly() {
         </div>
       </div>
 
-      {ghostPos && dragTypeRef.current && (
+      {ghostPos && dragType && (
         <div
           className="fixed pointer-events-none z-50 select-none"
           style={{
@@ -162,7 +165,7 @@ export default function PinTheWilly() {
             top: ghostPos.y - 36,
           }}
         >
-          <PinItemDisplay type={dragTypeRef.current} size="ghost" />
+          <PinItemDisplay type={dragType} size="ghost" />
         </div>
       )}
 
