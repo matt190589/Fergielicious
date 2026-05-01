@@ -45,6 +45,7 @@ export default function FergieFight() {
 
   const showFeedbackRef = useRef((_type: "dodged" | "whacked") => {});
   const resumeAfterDildo = useRef(() => {});
+  const scheduleDecision = useRef(() => {});
   const scheduleMove = useRef(() => {});
 
   useEffect(() => {
@@ -64,32 +65,36 @@ export default function FergieFight() {
       }, 750);
     };
 
+    // Shared "dildo or reshow Fergie" decision — runs whenever Fergie hides,
+    // whether by natural timer or because the player landed a hit.
+    scheduleDecision.current = () => {
+      moveTimerRef.current = setTimeout(() => {
+        if (gameStateRef.current !== "playing") return;
+        if (Math.random() < DILDO_CHANCE) {
+          dildoActiveRef.current = true;
+          setDildoVisible(true);
+          moveTimerRef.current = setTimeout(() => {
+            if (dildoActiveRef.current) {
+              dildoActiveRef.current = false;
+              setDildoWhacks((prev) => prev + 1);
+              showFeedbackRef.current("whacked");
+            }
+            setDildoVisible(false);
+            resumeAfterDildo.current();
+          }, DILDO_WINDOW_MS);
+        } else {
+          setPosition({ x: randomInt(5, 80), y: randomInt(5, 80) });
+          setVisible(true);
+          scheduleMove.current();
+        }
+      }, 200);
+    };
+
     scheduleMove.current = () => {
       if (gameStateRef.current !== "playing") return;
       moveTimerRef.current = setTimeout(() => {
         setVisible(false);
-        moveTimerRef.current = setTimeout(() => {
-          if (gameStateRef.current !== "playing") return;
-
-          if (Math.random() < DILDO_CHANCE) {
-            dildoActiveRef.current = true;
-            setDildoVisible(true);
-
-            moveTimerRef.current = setTimeout(() => {
-              if (dildoActiveRef.current) {
-                dildoActiveRef.current = false;
-                setDildoWhacks((prev) => prev + 1);
-                showFeedbackRef.current("whacked");
-              }
-              setDildoVisible(false);
-              resumeAfterDildo.current();
-            }, DILDO_WINDOW_MS);
-          } else {
-            setPosition({ x: randomInt(5, 80), y: randomInt(5, 80) });
-            setVisible(true);
-            scheduleMove.current();
-          }
-        }, 200);
+        scheduleDecision.current();
       }, randomInt(400, 800));
     };
   });
@@ -123,12 +128,7 @@ export default function FergieFight() {
     setScore((prev) => prev + 1);
     setVisible(false);
     if (moveTimerRef.current) clearTimeout(moveTimerRef.current);
-    moveTimerRef.current = setTimeout(() => {
-      if (gameStateRef.current !== "playing") return;
-      setPosition({ x: randomInt(5, 80), y: randomInt(5, 80) });
-      setVisible(true);
-      scheduleMove.current();
-    }, 200);
+    scheduleDecision.current();
   }
 
   function handleArenaPointerDown(e: React.PointerEvent<HTMLDivElement>) {
