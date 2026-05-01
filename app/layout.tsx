@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Bangers, Fredoka } from "next/font/google";
 import "./globals.css";
+import LoadingScreen from "@/components/ui/LoadingScreen";
 
 const bangers = Bangers({
   weight: "400",
@@ -30,6 +31,7 @@ export default function RootLayout({
       className={`${bangers.variable} ${fredoka.variable} h-full`}
     >
       <body className="min-h-full flex flex-col bg-cream font-body">
+        <LoadingScreen />
         {children}
       </body>
     </html>

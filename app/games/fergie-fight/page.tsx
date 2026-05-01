@@ -10,8 +10,8 @@ import Timer from "@/components/ui/Timer";
 import { FERGIE_BOXING, BLACK_DILDO } from "@/lib/images";
 import { randomInt } from "@/lib/utils";
 
-const DURATION = 30;
-const DILDO_WINDOW_MS = 600;
+const DURATION = 25;
+const DILDO_WINDOW_MS = 900;
 const DILDO_CHANCE = 0.3;
 const SWIPE_THRESHOLD = 50;
 
