@@ -11,7 +11,7 @@ import { FERGIE_PLACEHOLDER } from "@/lib/images";
 
 type Floater = { id: string; x: number; y: number };
 
-const DURATION = 30;
+const DURATION = 20;
 
 function getScoreMessage(ml: number): string {
   if (ml <= 300) return "Barely a sip. Fergie's still sober — unacceptable.";
@@ -34,8 +34,8 @@ export default function BuckFergie() {
   useEffect(() => {
     if (gameState !== "playing") return;
     if (timeLeft === 0) {
-      setGameState("done");
-      return;
+      const t = setTimeout(() => setGameState("done"), 0);
+      return () => clearTimeout(t);
     }
     const t = setTimeout(() => setTimeLeft((prev) => prev - 1), 1000);
     return () => clearTimeout(t);

@@ -10,8 +10,8 @@ import Timer from "@/components/ui/Timer";
 import { FERGIE_BOXING, BLACK_DILDO } from "@/lib/images";
 import { randomInt } from "@/lib/utils";
 
-const DURATION = 25;
-const DILDO_WINDOW_MS = 900;
+const DURATION = 20;
+const DILDO_WINDOW_MS = 720;
 const DILDO_CHANCE = 0.3;
 const SWIPE_THRESHOLD = 50;
 
@@ -256,7 +256,7 @@ export default function FergieFight() {
           {feedback === "whacked" && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-red-600/30">
               <p className="font-display text-white text-5xl drop-shadow-lg">
-                WHACK! 🍆
+                WHACK!
               </p>
             </div>
           )}
