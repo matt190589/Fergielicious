@@ -263,10 +263,10 @@ export default function FergieFight() {
 
           {gameState === "idle" && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/60 rounded-2xl px-6">
-              <div className="bg-white/10 rounded-2xl px-5 py-4 text-center space-y-1">
-                <p className="font-display text-white text-lg">🥊 Tap Fergie to land a punch</p>
-                <p className="font-display text-white text-lg">🍆 Swipe right to dodge the dildo</p>
-                <p className="font-body text-white/70 text-sm">You have under a second to dodge — don&apos;t get caught!</p>
+              <div className="bg-white/10 rounded-2xl px-4 py-3 text-center space-y-1">
+                <p className="font-display text-white text-base sm:text-lg">🥊 Tap Fergie to land a punch</p>
+                <p className="font-display text-white text-base sm:text-lg">🍆 Swipe right to dodge the dildo</p>
+                <p className="font-body text-white/70 text-xs sm:text-sm">You have under a second to dodge — don&apos;t get caught!</p>
               </div>
               <Button variant="primary" onClick={handleStart}>
                 Start Fight! 🥊

@@ -23,13 +23,13 @@ const games = [
 
 export default function Home() {
   return (
-    <main className="flex flex-col items-center min-h-screen px-4 py-12 bg-cream">
+    <main className="flex flex-col items-center min-h-screen px-4 py-8 sm:py-12 bg-cream">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="font-display text-8xl text-red-primary tracking-wide leading-none">
+          <h1 className="font-display text-[clamp(2.8rem,13vw,5rem)] text-red-primary tracking-wide leading-none">
             Fergielicious
           </h1>
-          <p className="mt-4 text-lg text-gray-700 font-body leading-snug">
+          <p className="mt-3 text-base sm:text-lg text-gray-700 font-body leading-snug">
             Three mini-games in honour of the legend himself.{" "}
             <span className="font-semibold">Pick your poison.</span>
           </p>

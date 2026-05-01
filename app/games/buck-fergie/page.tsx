@@ -87,7 +87,7 @@ export default function BuckFergie() {
         style={{ touchAction: "manipulation" }}
         onPointerDown={handleTap}
       >
-        <div className="absolute top-4 left-0 right-0 flex justify-between items-center px-6 pointer-events-none">
+        <div className="absolute top-4 left-0 right-0 flex justify-between items-center px-4 pointer-events-none">
           <div className="bg-white rounded-xl px-4 py-2 shadow">
             <p className="font-display text-xl text-gray-700">{ml}ml 🍷</p>
           </div>

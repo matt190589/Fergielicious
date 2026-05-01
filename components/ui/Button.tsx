@@ -14,7 +14,7 @@ export default function Button({
   disabled = false,
 }: ButtonProps) {
   const base =
-    "font-display tracking-wide text-xl rounded-2xl px-8 py-4 shadow-md active:scale-95 transition-transform disabled:opacity-50 disabled:pointer-events-none min-w-[160px]";
+    "font-display tracking-wide text-xl rounded-2xl px-6 py-4 shadow-md active:scale-95 transition-transform disabled:opacity-50 disabled:pointer-events-none";
   const styles = {
     primary: "bg-red-primary text-white hover:bg-red-dark",
     secondary:

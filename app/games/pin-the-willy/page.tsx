@@ -51,7 +51,7 @@ function PinItemDisplay({
       />
     );
   }
-  const cls = size === "modal" ? "text-6xl" : "text-7xl";
+  const cls = size === "modal" ? "text-5xl" : "text-6xl";
   return <span className={cls}>{EMOJIS[type]}</span>;
 }
 
@@ -170,12 +170,12 @@ export default function PinTheWilly() {
       )}
 
       {placed && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-          <div className="bg-white rounded-3xl shadow-2xl p-6 flex flex-col items-center gap-5 w-full max-w-sm">
-            <h2 className="font-display text-3xl text-red-600 tracking-wide">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-6">
+          <div className="bg-white rounded-3xl shadow-2xl p-5 flex flex-col items-center gap-4 w-full max-w-sm">
+            <h2 className="font-display text-2xl sm:text-3xl text-red-600 tracking-wide">
               Result!
             </h2>
-            <div className="relative w-full aspect-square rounded-xl overflow-hidden shadow-md">
+            <div className="relative w-full aspect-square rounded-xl overflow-hidden shadow-md" style={{ maxHeight: "45vh" }}>
               <Image
                 src={FERGIE_PIN}
                 alt="Fergie"
@@ -195,7 +195,7 @@ export default function PinTheWilly() {
                 <PinItemDisplay type={placed.type} size="modal" />
               </div>
             </div>
-            <p className="font-body text-gray-600 text-center text-lg">
+            <p className="font-body text-gray-600 text-center text-sm sm:text-base leading-snug">
               {caption}
             </p>
             <div className="flex gap-3 w-full">
