@@ -7,14 +7,14 @@ const games = [
     teaser: "Help Fergie find his wee Willy!",
     href: "/games/pin-the-willy",
   },
+  // {
+  //   emoji: "🍷",
+  //   title: "Buck Fergie",
+  //   teaser: "Feed Fergie as much Buckfast as possible in 20 seconds.",
+  //   href: "/games/buck-fergie",
+  // },
   {
-    emoji: "🍷",
-    title: "Buck Fergie",
-    teaser: "Feed Fergie as much Buckfast as possible in 20 seconds.",
-    href: "/games/buck-fergie",
-  },
-  {
-    emoji: "🥊",
+    emoji: "👊",
     title: "Fergie Fight",
     teaser: "Whack Fergie before he ducks away.",
     href: "/games/fergie-fight",
@@ -30,8 +30,8 @@ export default function Home() {
             Fergielicious
           </h1>
           <p className="mt-3 text-base sm:text-lg text-gray-700 font-body leading-snug">
-            Three mini-games in honour of the legend himself.{" "}
-            <span className="font-semibold">Pick your poison.</span>
+            A few mini-games in honour of the legend himself.{" "}
+            <span className="font-semibold"></span>
           </p>
         </div>
 

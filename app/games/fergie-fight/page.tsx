@@ -169,7 +169,7 @@ export default function FergieFight() {
     return (
       <GameLayout title="Fergie Fight">
         <GameOverScreen
-          score={`🥊 ${score} punch${score === 1 ? "" : "es"} · 🍆 ${dildoWhacks} whack${dildoWhacks === 1 ? "" : "s"}`}
+          score={`👊 ${score} punch${score === 1 ? "" : "es"} · 🍆 ${dildoWhacks} whack${dildoWhacks === 1 ? "" : "s"}`}
           message={getResultMessage(score, dildoWhacks)}
           onPlayAgain={handleStart}
           onBackToMenu={() => router.push("/")}
@@ -183,7 +183,7 @@ export default function FergieFight() {
       <div className="flex flex-col flex-1 items-center px-4 py-4 gap-4">
         <div className="flex justify-between items-center w-full max-w-md">
           <div className="bg-white rounded-xl px-4 py-2 shadow">
-            <p className="font-display text-xl">🥊 {score} · 🍆 {dildoWhacks}</p>
+            <p className="font-display text-xl">👊 {score} · 🍆 {dildoWhacks}</p>
           </div>
           {gameState === "playing" && <Timer seconds={timeLeft} />}
         </div>
@@ -264,12 +264,12 @@ export default function FergieFight() {
           {gameState === "idle" && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/60 rounded-2xl px-6">
               <div className="bg-white/10 rounded-2xl px-4 py-3 text-center space-y-1">
-                <p className="font-display text-white text-base sm:text-lg">🥊 Tap Fergie to land a punch</p>
+                <p className="font-display text-white text-base sm:text-lg">👊 Tap Fergie to land a punch</p>
                 <p className="font-display text-white text-base sm:text-lg">🍆 Swipe right to dodge the dildo</p>
                 <p className="font-body text-white/70 text-xs sm:text-sm">You have under a second to dodge — don&apos;t get caught!</p>
               </div>
               <Button variant="primary" onClick={handleStart}>
-                Start Fight! 🥊
+                Start Fight! 👊
               </Button>
             </div>
           )}
