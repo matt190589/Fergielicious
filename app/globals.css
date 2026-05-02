@@ -42,3 +42,13 @@ body {
 .float-up {
   animation: float-up 1s ease-out forwards;
 }
+
+@keyframes finishPulse {
+  0%, 100% { box-shadow: 0 0 10px 3px rgba(139,0,0,0.4); }
+  50%       { box-shadow: 0 0 22px 8px rgba(139,0,0,0.9); }
+}
+
+@keyframes warningPulse {
+  from { opacity: 0.25; transform: translate(-50%, -50%) scale(0.85); }
+  to   { opacity: 1;    transform: translate(-50%, -50%) scale(1.15); }
+}

@@ -19,7 +19,7 @@ function getResultMessage(score: number, whacks: number): string {
   if (whacks >= 4) return `Fergie jabbed you ${whacks} times with his big black dick. Who's really winning here?`;
   if (score === 0) return "Fergie didn't even feel it. Try harder!";
   if (score <= 5) return "A light warm-up. Fergie's barely sweating.";
-  if (score <= 15) return "Not bad! Fergie's got a three back eyes.";
+  if (score <= 15) return "Not bad! Fergie's got three back eyes.";
   if (score <= 25) return "Fergie's battered. Ole, Ole, Ole";
   return "Fergie KOed!";
 }

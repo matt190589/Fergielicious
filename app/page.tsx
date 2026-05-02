@@ -19,6 +19,12 @@ const games = [
     teaser: "Whack Fergie before he ducks away.",
     href: "/games/fergie-fight",
   },
+  {
+    emoji: "🍗",
+    title: "Escape the Colonel",
+    teaser: "Fergie's back in the Chicken Shack. Can he escape again?",
+    href: "/games/escape-the-colonel",
+  },
 ];
 
 export default function Home() {

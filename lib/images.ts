@@ -3,3 +3,5 @@ export const FERGIE_PIN = "/images/fergie/fergie-pin.webp";
 export const LIVERPOOL_CREST = "/images/fergie/liverpool-crest.jpg";
 export const FERGIE_BOXING = "/images/fergie/fergie-boxing.webp";
 export const BLACK_DILDO = "/images/fergie/black-dildo.avif";
+export const COLONEL = "/images/fergie/colonel.jpeg";
+export const GRAVY = "/images/fergie/gravy.png";
