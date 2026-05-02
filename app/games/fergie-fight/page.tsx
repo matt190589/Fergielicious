@@ -95,7 +95,7 @@ export default function FergieFight() {
       moveTimerRef.current = setTimeout(() => {
         setVisible(false);
         scheduleDecision.current();
-      }, randomInt(400, 800));
+      }, randomInt(250, 550));
     };
   });
 
