@@ -14,8 +14,6 @@ const GRAVY_R = 26;            // collision radius px
 const PATROL_SPEED = 18;       // % of container width per second (base)
 const PATROL_SPEED_VARIANCE = 0.4; // each patrol gets base * rnd(1-v, 1+v)
 const TRACKER_SPEED = 7;       // % of container diagonal per second (base)
-const SPEED_BOOST = 1.5;       // applied from level 8+
-const TRACKER_BOOST_L9 = 2.2;  // tracker-only boost for levels 9-10
 const GRAVY_SLOW = 0.4;        // speed multiplier when slowed
 const GRAVY_SLOW_MS = 1000;
 const TRACKER_WARN_MS = 500;
@@ -55,24 +53,28 @@ interface WarningMarker {
 
 interface LevelConfig {
   patrol: number;
-  trackerDelays: number[];  // ms from level start before each tracker spawns
+  patrolMult: number;         // speed multiplier for standard patrol colonels
+  patrolFastCount: number;    // how many of the patrol colonels use patrolFastMult
+  patrolFastMult: number;     // speed multiplier for the fast subset
+  preSpawnTrackers: number;   // trackers active at level start (no warning flash)
+  trackerDelays: number[];    // additional trackers that spawn mid-level (with warning)
+  trackerMult: number;        // tracker speed multiplier
   gravy: number;
-  boost: boolean;          // applies to both patrol and tracker speeds
-  trackerBoost?: number;   // overrides tracker speed multiplier when set
 }
 
 // ── level table ──────────────────────────────────────────────────────────────
+//  patrol patrolMult pFastN pFastM preSpawn trackerDelays                       tMult gravy
 const LEVELS: LevelConfig[] = [
-  { patrol: 1, trackerDelays: [],                                               gravy: 0, boost: false }, // 1
-  { patrol: 2, trackerDelays: [],                                               gravy: 0, boost: false }, // 2
-  { patrol: 2, trackerDelays: [],                                               gravy: 1, boost: false }, // 3
-  { patrol: 3, trackerDelays: [],                                               gravy: 2, boost: false }, // 4
-  { patrol: 1, trackerDelays: [200],                                            gravy: 0, boost: false }, // 5
-  { patrol: 0, trackerDelays: [200, 3200],                                      gravy: 0, boost: false }, // 6
-  { patrol: 2, trackerDelays: [200, 3200],                                      gravy: 0, boost: false }, // 7
-  { patrol: 2, trackerDelays: [200, 3200],                                      gravy: 0, boost: true  }, // 8
-  { patrol: 2, trackerDelays: [200, 3200],                                      gravy: 4, boost: true, trackerBoost: TRACKER_BOOST_L9 }, // 9
-  { patrol: 3, trackerDelays: [200, 1700, 3200, 4700, 6200, 7700],              gravy: 5, boost: true, trackerBoost: TRACKER_BOOST_L9 }, // 10
+  { patrol: 1, patrolMult: 1.0, patrolFastCount: 0, patrolFastMult: 1.0,   preSpawnTrackers: 0, trackerDelays: [],                       trackerMult: 1.0, gravy: 0 }, // 1
+  { patrol: 2, patrolMult: 1.0, patrolFastCount: 0, patrolFastMult: 1.0,   preSpawnTrackers: 0, trackerDelays: [],                       trackerMult: 1.0, gravy: 0 }, // 2
+  { patrol: 2, patrolMult: 1.0, patrolFastCount: 0, patrolFastMult: 1.0,   preSpawnTrackers: 0, trackerDelays: [],                       trackerMult: 1.0, gravy: 2 }, // 3 (+1 gravy)
+  { patrol: 3, patrolMult: 1.0, patrolFastCount: 0, patrolFastMult: 1.0,   preSpawnTrackers: 0, trackerDelays: [],                       trackerMult: 1.0, gravy: 2 }, // 4
+  { patrol: 2, patrolMult: 1.0, patrolFastCount: 0, patrolFastMult: 1.0,   preSpawnTrackers: 0, trackerDelays: [200],                    trackerMult: 1.0, gravy: 0 }, // 5 (+1 patrol)
+  { patrol: 0, patrolMult: 1.0, patrolFastCount: 0, patrolFastMult: 1.0,   preSpawnTrackers: 2, trackerDelays: [200],                    trackerMult: 1.0, gravy: 0 }, // 6 (2 on screen + 1 generates)
+  { patrol: 2, patrolMult: 1.5, patrolFastCount: 0, patrolFastMult: 1.5,   preSpawnTrackers: 0, trackerDelays: [200, 3200],              trackerMult: 1.0, gravy: 0 }, // 7 (patrols 50% faster)
+  { patrol: 3, patrolMult: 1.5, patrolFastCount: 0, patrolFastMult: 1.5,   preSpawnTrackers: 0, trackerDelays: [200, 3200],              trackerMult: 1.5, gravy: 0 }, // 8 (+1 patrol)
+  { patrol: 2, patrolMult: 1.5, patrolFastCount: 0, patrolFastMult: 1.5,   preSpawnTrackers: 2, trackerDelays: [200, 3200],              trackerMult: 2.2, gravy: 4 }, // 9 (2 trackers on screen + 2 generate)
+  { patrol: 5, patrolMult: 1.5, patrolFastCount: 3, patrolFastMult: 2.25,  preSpawnTrackers: 2, trackerDelays: [200, 1700, 3200, 4700],  trackerMult: 2.2, gravy: 3 }, // 10 (3 fast + 2 normal patrols; 2 on screen + 4 generate)
 ];
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -83,15 +85,15 @@ function rnd(lo: number, hi: number) {
 function buildPatrols(cfg: LevelConfig): Colonel[] {
   const cols: Colonel[] = [];
   for (let i = 0; i < cfg.patrol; i++) {
-    let y = 0;
-    let tries = 0;
+    let y = 0, tries = 0;
     do {
       y = rnd(20, 78);
       tries++;
     } while (tries < 20 && cols.some((c) => Math.abs(c.y - y) < 15));
 
+    const mult = i < cfg.patrolFastCount ? cfg.patrolFastMult : cfg.patrolMult;
     const variance = rnd(1 - PATROL_SPEED_VARIANCE, 1 + PATROL_SPEED_VARIANCE);
-    const spd = PATROL_SPEED * variance * (cfg.boost ? SPEED_BOOST : 1);
+    const spd = PATROL_SPEED * mult * variance;
     const goRight = Math.random() < 0.5;
     cols.push({
       id: `p${i}-${Date.now()}`,
@@ -103,6 +105,30 @@ function buildPatrols(cfg: LevelConfig): Colonel[] {
     });
   }
   return cols;
+}
+
+function buildPreSpawnTrackers(count: number, fergieX: number, fergieY: number): Colonel[] {
+  const trackers: Colonel[] = [];
+  for (let i = 0; i < count; i++) {
+    let sx = 0, sy = 0, tries = 0;
+    do {
+      sx = rnd(5, 88);
+      sy = rnd(FINISH_H + 5, 88);
+      const farFromFergie = Math.hypot(sx - fergieX, sy - fergieY) >= 30;
+      const farFromOthers = trackers.every((t) => Math.hypot(t.x - sx, t.y - sy) >= 20);
+      if (farFromFergie && farFromOthers) break;
+      tries++;
+    } while (tries < 25);
+    trackers.push({
+      id: `ps${i}-${Date.now()}`,
+      kind: "tracker",
+      x: sx,
+      y: sy,
+      vx: 0,
+      active: true,
+    });
+  }
+  return trackers;
 }
 
 function buildGravy(count: number, fx: number, fy: number): GravyStain[] {
@@ -226,8 +252,7 @@ export default function EscapeTheColonel() {
           const dist = Math.hypot(dxPx, dyPx);
           if (dist > 1) {
             const diag = Math.hypot(rect.width, rect.height);
-            const trackerMult = cfg.trackerBoost ?? (cfg.boost ? SPEED_BOOST : 1);
-            const spd = (TRACKER_SPEED / 100) * diag * trackerMult * delta;
+            const spd = (TRACKER_SPEED / 100) * diag * cfg.trackerMult * delta;
             col.x += (dxPx / dist) * (spd / rect.width) * 100;
             col.y += (dyPx / dist) * (spd / rect.height) * 100;
           }
@@ -303,7 +328,10 @@ export default function EscapeTheColonel() {
 
     const cfg = LEVELS[lvl - 1];
     const start = { x: 50, y: 88 };
-    colonelsRef.current = buildPatrols(cfg);
+    colonelsRef.current = [
+      ...buildPatrols(cfg),
+      ...buildPreSpawnTrackers(cfg.preSpawnTrackers, start.x, start.y),
+    ];
     gravyRef.current = buildGravy(cfg.gravy, start.x, start.y);
     fergieRef.current = { ...start, isDragging: false };
     levelRef.current = lvl;
