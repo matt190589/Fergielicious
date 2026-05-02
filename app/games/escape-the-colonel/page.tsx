@@ -14,6 +14,7 @@ const GRAVY_R = 26;            // collision radius px
 const PATROL_SPEED = 18;       // % of container width per second (base)
 const PATROL_SPEED_VARIANCE = 0.4; // each patrol gets base * rnd(1-v, 1+v)
 const TRACKER_SPEED = 7;       // % of container diagonal per second (base)
+const FERGIE_MAX_SPEED = 950;  // px/s — max drag speed (normal)
 const GRAVY_SLOW = 0.4;        // speed multiplier when slowed
 const GRAVY_SLOW_MS = 1000;
 const TRACKER_WARN_MS = 500;
@@ -165,7 +166,8 @@ export default function EscapeTheColonel() {
   // Mutable game-loop state (no re-render on change)
   const colonelsRef = useRef<Colonel[]>([]);
   const gravyRef = useRef<GravyStain[]>([]);
-  const fergieRef = useRef({ x: 50, y: 88, isDragging: false });
+  const fergieRef = useRef({ x: 50, y: 88, isDragging: false, speedFactor: 1.0 });
+  const pointerTargetRef = useRef({ x: 50, y: 88 });
   const levelRef = useRef(1);
   const scoreRef = useRef(0);
   const isRunning = useRef(false);
@@ -239,6 +241,22 @@ export default function EscapeTheColonel() {
       const cfg = LEVELS[levelRef.current - 1];
       const fergie = fergieRef.current;
 
+      // Move Fergie toward pointer target (speed-capped so gravy slow is felt)
+      if (fergie.isDragging) {
+        const target = pointerTargetRef.current;
+        const dxPx = (target.x - fergie.x) / 100 * rect.width;
+        const dyPx = (target.y - fergie.y) / 100 * rect.height;
+        const dist = Math.hypot(dxPx, dyPx);
+        const maxMove = FERGIE_MAX_SPEED * fergie.speedFactor * delta;
+        if (dist <= maxMove) {
+          fergie.x = target.x;
+          fergie.y = target.y;
+        } else {
+          fergie.x += (dxPx / dist) * (maxMove / rect.width) * 100;
+          fergie.y += (dyPx / dist) * (maxMove / rect.height) * 100;
+        }
+      }
+
       // Move colonels
       for (const col of colonelsRef.current) {
         if (!col.active) continue;
@@ -285,9 +303,11 @@ export default function EscapeTheColonel() {
         const gyPx = g.y / 100 * rect.height;
         if (Math.hypot(fxPx - gxPx, fyPx - gyPx) < FERGIE_R + GRAVY_R) {
           g.consumed = true;
+          fergie.speedFactor = GRAVY_SLOW;
           if (gravySlowTimer.current) clearTimeout(gravySlowTimer.current);
           setGravySlowed(true);
           gravySlowTimer.current = setTimeout(() => {
+            fergieRef.current.speedFactor = 1.0;
             setGravySlowed(false);
           }, GRAVY_SLOW_MS);
         }
@@ -333,7 +353,8 @@ export default function EscapeTheColonel() {
       ...buildPreSpawnTrackers(cfg.preSpawnTrackers, start.x, start.y),
     ];
     gravyRef.current = buildGravy(cfg.gravy, start.x, start.y);
-    fergieRef.current = { ...start, isDragging: false };
+    fergieRef.current = { ...start, isDragging: false, speedFactor: 1.0 };
+    pointerTargetRef.current = { ...start };
     levelRef.current = lvl;
     scoreRef.current = currentScore;
 
@@ -358,8 +379,8 @@ export default function EscapeTheColonel() {
     if (!fergieRef.current.isDragging) return;
     const rect = playAreaRef.current?.getBoundingClientRect();
     if (!rect) return;
-    fergieRef.current.x = Math.max(4, Math.min(93, ((e.clientX - rect.left) / rect.width) * 100));
-    fergieRef.current.y = Math.max(1, Math.min(96, ((e.clientY - rect.top) / rect.height) * 100));
+    pointerTargetRef.current.x = Math.max(4, Math.min(93, ((e.clientX - rect.left) / rect.width) * 100));
+    pointerTargetRef.current.y = Math.max(1, Math.min(96, ((e.clientY - rect.top) / rect.height) * 100));
   }
 
   function handleAreaPointerUp() {
